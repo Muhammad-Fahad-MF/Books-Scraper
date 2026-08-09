@@ -1,0 +1,26 @@
+{
+  "name": "scraper",
+  "version": "1.0.0",
+  "description": "A friendly and practice HTML scraper for https://books.toscrape.com to scrape book data",
+  "keywords": [
+    "book-html-scraper"
+  ],
+  "homepage": "https://github.com/Muhammad-Fahad-MF/Books-Scraper#readme",
+  "bugs": {
+    "url": "https://github.com/Muhammad-Fahad-MF/Books-Scraper/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Muhammad-Fahad-MF/Books-Scraper.git"
+  },
+  "license": "MIT",
+  "author": "Fahad",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
