@@ -1,5 +1,6 @@
-import { readdirSync } from "node:fs";
-import { writeFile } from "node:fs/promises";
+import { readdirSync, readFileSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import * as cheerio from "cheerio";
 
 
 const Site_URL: string = "https://books.toscrape.com";
@@ -19,7 +20,7 @@ const RequestFromSite = async (page: string) => {
                 "Accept": "text/html",
                 "User-Agent": "FlyRankInternship-A9/1.0 (https://github.com/Muhammad-Fahad-MF/Books-Scraper)"
             },
-            signal: AbortSignal.timeout(30000)
+            signal: AbortSignal.timeout(8000)
         });
         
         if(!response.ok){
@@ -33,7 +34,14 @@ const RequestFromSite = async (page: string) => {
     }
 }
 
-for (let i = 1; i < 4; i++){
-    let page = `page-${i}.html`;
-    RequestFromSite(page);
-} 
+// for (let i = 1; i < 4; i++){
+//     let page = `page-${i}.html`;
+//     RequestFromSite(page);
+// } 
+const html = readFileSync("./cache/page-1.html", {
+    encoding: 'utf-8'
+});
+console.log('here!');
+const $ = cheerio.load(html);
+let title = $('h3 a').text();
+console.log(title);
