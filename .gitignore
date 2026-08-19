@@ -15,3 +15,7 @@ npm-debug.log*
 # OS / Editor clutter
 .DS_Store
 .vscode/
+
+# Cached Pages
+cache/catalogue_pages/*
+cache/detail_pages/*
