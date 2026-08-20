@@ -19,3 +19,6 @@ npm-debug.log*
 # Cached Pages
 cache/catalogue_pages/*
 cache/detail_pages/*
+
+# Ouput Files
+output/*
