@@ -28,6 +28,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@json2csv/node": "^7.0.8",
     "cheerio": "^1.2.0",
     "zod": "^4.4.3"
   }

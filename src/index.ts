@@ -1,13 +1,17 @@
 import {
+  createWriteStream,
   existsSync,
   mkdirSync,
   readdirSync,
   readFileSync,
   writeFileSync,
+  WriteStream,
 } from "node:fs";
 import * as cheerio from "cheerio";
 import * as z from "zod";
 import { writeFile } from "node:fs/promises";
+import { AsyncParser, Transform } from "@json2csv/node";
+import { Readable } from "node:stream";
 
 const BookSchema = z.object({
   title: z.string().nonempty(),
@@ -158,6 +162,7 @@ const readDetailsHTML = async (bookPage: string) => {
 const OUTPUT_DIR = "./output";
 const BOOK_FILE = "books.json";
 const ERROR_FILE = "errors.json";
+const CSV_FILE = "books.csv";
 
 const readRecordsJSON = () => {
   try {
@@ -166,9 +171,9 @@ const readRecordsJSON = () => {
     }
     const data = readFileSync(`${OUTPUT_DIR}/${BOOK_FILE}`, "utf-8");
     const jsonParsed: Book = JSON.parse(data);
-    const parsed = z.array(z.tuple([z.string(), BookSchema])).parse(jsonParsed);
+    const parsed = z.array(BookSchema).parse(jsonParsed);
     parsed.forEach((val) => {
-      Books.set(...val);
+      Books.set(val.product_url, val);
     });
   } catch (err) {
     console.error("Failed in readRecordJSON: ", err, "\n\n");
@@ -181,13 +186,28 @@ const writeErrorsJSON = async () => {
   await writeFile(`${OUTPUT_DIR}/${ERROR_FILE}`, jsonErrors, "utf-8");
 };
 
-const writeRecordsJSON = async () => {
+const writeRecordsJsonNCsv = async () => {
   if (!existsSync(OUTPUT_DIR)) {
     mkdirSync(OUTPUT_DIR);
   }
-  const record = Array.from(Books.entries());
+  const record = Array.from(Books.values());
   const jsonRecord = JSON.stringify(record, null, 2);
-  writeFileSync(`${OUTPUT_DIR}/${BOOK_FILE}`, jsonRecord, "utf-8");
+  const csvParser = new AsyncParser({
+    fields: [
+      "title",
+      "product_url",
+      "price",
+      "price_gbp",
+      "availability_text",
+      "rating_text",
+      "description",
+      "source_page",
+      "fetched_at",
+    ],
+  });
+  const csv = csvParser.parse(record);
+  await writeFile(`${OUTPUT_DIR}/${CSV_FILE}`, csv, "utf-8");
+  await writeFile(`${OUTPUT_DIR}/${BOOK_FILE}`, jsonRecord, "utf-8");
   await writeErrorsJSON();
 };
 
@@ -287,5 +307,5 @@ console.log(
   ),
 );
 
-await writeRecordsJSON();
+await writeRecordsJsonNCsv();
 await writeReportJSON();
