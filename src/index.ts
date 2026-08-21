@@ -15,58 +15,90 @@ const BookSchema = z.object({
   price_text: z.string(),
   price_gbp: z.union([
     z.number(),
-    z.string().transform((val) => parseFloat(val.replace(/[^0-9.]/g, "")))
+    z.string().transform((val) => parseFloat(val.replace(/[^0-9.]/g, ""))),
   ]),
   availability_text: z.string(),
   rating_text: z.string(),
-  description: z.string().optional().default("..."),
+  description: z.string().nullable(),
   source_page: z.string(),
   fetched_at: z.coerce.date().default(() => new Date()),
 });
 
 type Book = z.output<typeof BookSchema>;
 
-class ErrorBook{
+class ErrorBook {
   error_message: string;
   public readonly book: unknown;
-  constructor(message: string, book: unknown){
-    this.error_message = message,
-    this.book = book;
+  constructor(message: string, book: unknown) {
+    ((this.error_message = message), (this.book = book));
   }
 }
 
-const ErrorBooks: ErrorBook[] = []; 
+const ErrorBooks: ErrorBook[] = [];
+
+class RunReport {
+  startTime: Date;
+  duration: number = 0;
+  pages_fetched: number = 0;
+  cache_hits: number = 0;
+  valid_records: number = 0;
+  invalid_records: number = 0;
+  failed_pages: number = 0;
+
+  constructor() {
+    this.startTime = new Date();
+  }
+
+  setDuration() {
+    this.duration = Date.now() - this.startTime.getTime();
+  }
+}
 
 const Site_URL: string = "https://books.toscrape.com/catalogue/";
 const bookURLs = new Map<string, URL>(); // stores detail page URL and Source Page URL
 const Books = new Map<string, Book>();
-let detailPages: number = 0;
+const report = new RunReport();
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const requestPage = async (url: string, retriesLeft = 1): Promise<Response> => {
+  try {
+    await delay(1500);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "text/html",
+        "User-Agent":
+          "FlyRankInternship-A9/1.0 (https://github.com/Muhammad-Fahad-MF/Books-Scraper)",
+      },
+      signal: AbortSignal.timeout(10000),
+    });
 
-const requestPage = async (url: string) => {
-  await delay(1500);
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Accept: "text/html",
-      "User-Agent":
-        "FlyRankInternship-A9/1.0 (https://github.com/Muhammad-Fahad-MF/Books-Scraper)",
-    },
-    signal: AbortSignal.timeout(10000),
-  });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${url}`);
+    }
 
-  if (!response.ok) {
-    throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+    report.pages_fetched++;
+    return response;
+  } catch (err: any) {
+    const isPermanent =
+      err?.message?.includes("404") || err?.message?.includes("403");
+
+    if (retriesLeft > 0 && !isPermanent) {
+      console.log(`[RETRYING] ${url}`);
+      await delay(2500);
+      return requestPage(url, retriesLeft - 1);
+    }
+
+    report.failed_pages++;
+    throw err;
   }
-  return response;
 };
 
 const CAT_CACHE_DIR = "./cache/catalogue_pages";
 
 const readCatHTML = async (url: URL): Promise<string> => {
   try {
-    if(!existsSync(CAT_CACHE_DIR)){
+    if (!existsSync(CAT_CACHE_DIR)) {
       mkdirSync(CAT_CACHE_DIR, { recursive: true });
     }
 
@@ -74,6 +106,7 @@ const readCatHTML = async (url: URL): Promise<string> => {
     let page = url.href.split("/").pop() as string;
     if (files.includes(page)) {
       console.log("Hit!");
+      report.cache_hits++;
       const html = readFileSync(`${CAT_CACHE_DIR}/${page}`, {
         encoding: "utf-8",
       });
@@ -104,6 +137,7 @@ const readDetailsHTML = async (bookPage: string) => {
     const cachedPages = readdirSync(DETAIL_CACHE_DIR);
 
     if (cachedPages.includes(fileName)) {
+      report.cache_hits++;
       return readFileSync(`${DETAIL_CACHE_DIR}/${fileName}`, "utf-8");
     }
 
@@ -117,7 +151,6 @@ const readDetailsHTML = async (bookPage: string) => {
 
     return html;
   } catch (err) {
-    console.error("Failed in readDetailsHTML:", err);
     throw err;
   }
 };
@@ -128,7 +161,7 @@ const ERROR_FILE = "errors.json";
 
 const readRecordsJSON = () => {
   try {
-    if(!existsSync(`${OUTPUT_DIR}/${BOOK_FILE}`)){
+    if (!existsSync(`${OUTPUT_DIR}/${BOOK_FILE}`)) {
       return;
     }
     const data = readFileSync(`${OUTPUT_DIR}/${BOOK_FILE}`, "utf-8");
@@ -136,28 +169,27 @@ const readRecordsJSON = () => {
     const parsed = z.array(z.tuple([z.string(), BookSchema])).parse(jsonParsed);
     parsed.forEach((val) => {
       Books.set(...val);
-    })
+    });
   } catch (err) {
-    console.error("Failed in readRecordJSON: ", err); 
+    console.error("Failed in readRecordJSON: ", err, "\n\n");
     throw err;
   }
-}
+};
 
 const writeErrorsJSON = async () => {
   const jsonErrors = JSON.stringify(ErrorBooks, null, 2);
   await writeFile(`${OUTPUT_DIR}/${ERROR_FILE}`, jsonErrors, "utf-8");
-}
+};
 
 const writeRecordsJSON = async () => {
-  if(!existsSync(OUTPUT_DIR)){
+  if (!existsSync(OUTPUT_DIR)) {
     mkdirSync(OUTPUT_DIR);
   }
   const record = Array.from(Books.entries());
   const jsonRecord = JSON.stringify(record, null, 2);
   writeFileSync(`${OUTPUT_DIR}/${BOOK_FILE}`, jsonRecord, "utf-8");
   await writeErrorsJSON();
-}
-
+};
 
 const extractDetails = async (bookPage: string, sourcePage: URL) => {
   const detailHtml = await readDetailsHTML(bookPage);
@@ -172,8 +204,12 @@ const extractDetails = async (bookPage: string, sourcePage: URL) => {
     const match = ratingClass.match(/\b(One|Two|Three|Four|Five)\b/);
     rating = match ? match[0] : "Unrated";
   }
-  let details = $("#product_description").next().text().replaceAll("...more", "")?.trim();
-  let cleanDetails = details ? details.replace(/[\s\u00A0]+/g, " ") : "...";
+  let details = $("#product_description")
+    .next()
+    .text()
+    .replaceAll("...more", "")
+    ?.trim();
+  let cleanDetails = details ? details.replace(/[\s\u00A0]+/g, " ") : null;
   const rawData = {
     title: title,
     product_url: bookPage,
@@ -185,41 +221,62 @@ const extractDetails = async (bookPage: string, sourcePage: URL) => {
     source_page: sourcePage.href,
   };
   const bookObject = BookSchema.safeParse(rawData);
-  if(!bookObject.success){
+  if (!bookObject.success) {
     const errorBook = new ErrorBook(z.prettifyError(bookObject.error), rawData);
     ErrorBooks.push(errorBook);
+    report.invalid_records++;
     return;
   }
-  detailPages++;
+  report.valid_records++;
   Books.set(bookPage, bookObject.data);
+};
+
+const writeReportJSON = async () => {
+  report.setDuration();
+  console.log(report);
+  const json = JSON.stringify(report, null, 2);
+  await writeFile(`${OUTPUT_DIR}/run-report.json`, json, "utf-8");
 };
 
 readRecordsJSON();
 let current_page = new URL("page-1.html", Site_URL);
 
 for (let i = 1; i <= 3; i++) {
-  const html = await readCatHTML(current_page);
-  const $ = cheerio.load(html);
+  try {
+    const html = await readCatHTML(current_page);
+    const $ = cheerio.load(html);
 
-  const links: string[] = $(".product_pod > h3 > a")
-    .map((_index, item) => $(item).attr("href"))
-    .get();
-  links.forEach((link) => {
-    let url = new URL(link as string, current_page.href);
-    if (!Books.has(url.href)) {
+    const links: string[] = $(".product_pod > h3 > a")
+      .map((_index, item) => $(item).attr("href"))
+      .get();
+    links.forEach((link) => {
+      let url = new URL(link as string, current_page.href);
       bookURLs.set(url.href, current_page);
+    });
+    const next_href = $(".next > a").attr("href");
+    if (next_href && i <= 3) {
+      current_page = new URL(next_href, Site_URL);
+    } else {
+      break;
     }
-  });
-  const next_href = $(".next > a").attr("href");
-  if (next_href && i <= 3) {
-    current_page = new URL(next_href, Site_URL);
-  } else {
-    break;
+  } catch (err) {
+    console.log(err, "\n\n");
+    continue;
   }
 }
 
+// Fake URL to Test!
+bookURLs.set(
+  "https://books.toscrape.com/catalogue/a-light-in-the-attic_10/index.html",
+  current_page,
+);
 for (const [detailURL, sourceURL] of bookURLs.entries()) {
-  await extractDetails(detailURL, sourceURL);
+  try {
+    await extractDetails(detailURL, sourceURL);
+  } catch (err) {
+    console.log(err, "\n\n");
+    continue;
+  }
 }
 
 console.log(
@@ -229,5 +286,6 @@ console.log(
     ),
   ),
 );
-console.log(Books.size);
-writeRecordsJSON();
+
+await writeRecordsJSON();
+await writeReportJSON();
