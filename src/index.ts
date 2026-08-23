@@ -1,17 +1,13 @@
 import {
-  createWriteStream,
   existsSync,
   mkdirSync,
   readdirSync,
-  readFileSync,
-  writeFileSync,
-  WriteStream,
+  readFileSync
 } from "node:fs";
 import * as cheerio from "cheerio";
 import * as z from "zod";
 import { writeFile } from "node:fs/promises";
-import { AsyncParser, Transform } from "@json2csv/node";
-import { Readable } from "node:stream";
+import { AsyncParser} from "@json2csv/node";
 
 const BookSchema = z.object({
   title: z.string().nonempty(),
