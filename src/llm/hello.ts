@@ -4,7 +4,6 @@ import OpenAI from "openai";
 const baseURL = process.env.LLAMA_BASE_URL;
 const apiKey = process.env.LLAMA_API_KEY;
 
-console.log(baseURL, apiKey);
 const client = new OpenAI({
   baseURL: baseURL,
   apiKey: apiKey

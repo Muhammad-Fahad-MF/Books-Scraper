@@ -91,3 +91,17 @@ I will not reuse this code on another website without checking its rules and per
 ### OpenAI Client:
 
 As we that almost every AI Model supports openai api so changing models in Open AI Client is only just 3 variables change, this is why we use .env to store Model's configurations which acts as a placeholder.
+
+### Curl commands for enrich-record:
+
+1. Root('/'):
+
+```
+curl -i http://localhost:3000
+```
+
+2. Enrich Record('/enrich-record'):
+
+```
+curl -i -X POST http://localhost:3000/enrich-record -H "Content-Type: application/json" -d "{\"title\": \"Book Title\", \"description\": \"Book Description\"}"
+```
