@@ -87,3 +87,7 @@ Scraping is only ok when it does not violate host's permission. So scrape with p
 ### Promise:
 
 I will not reuse this code on another website without checking its rules and permission first.
+
+### OpenAI Client:
+
+As we that almost every AI Model supports openai api so changing models in Open AI Client is only just 3 variables change, this is why we use .env to store Model's configurations which acts as a placeholder.
