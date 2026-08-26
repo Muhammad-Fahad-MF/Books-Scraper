@@ -3,7 +3,7 @@ import { enrichInputSchema, type EnrichOutput } from './models/enrich-model.js';
 import morgan from "morgan";
 import { getMessage } from './llm/hello.js';
 
-const LLM_STUB = 1;
+const LLM_STUB = 0;
 
 const app: Express = express();
 app.disable("x-powered-by");
@@ -18,14 +18,13 @@ app.get('/', (req: Request, res: Response) => {
     res.send({ message: "hello"});
 });
 
-app.post('/enrich-record', (req: Request, res: Response) => {
+app.post('/enrich-record', async (req: Request, res: Response) => {
     const request = enrichInputSchema.safeParse(req.body);
     if (!request.success) {
-        res.status(422).json({ detail: request.error.issues });
-        return;
+        return res.status(422).json({ detail: request.error.issues });
     }
     const record = request.data;
-    if (LLM_STUB === 1) {
+    if (LLM_STUB) {
         const response: EnrichOutput = {
             cleansed_description: {
                 value: record?.description,
@@ -45,11 +44,12 @@ app.post('/enrich-record', (req: Request, res: Response) => {
                 reason: "coding has to be academic"
             }
         };
-        // FIX 3: Pass raw object to res.json()
-        res.status(201).json(response);
+        return res.status(201).json(response);
     }
-    const response = getMessage(record);
-    res.send(201).json()
+    console.log("before request!");
+    const response = await getMessage(record);
+    console.log("after request!");
+    return res.send(201).json(response);
 });
 
 app.listen(port, () => {
