@@ -1,6 +1,7 @@
 import express, { type Express, type Response, type Request } from 'express';
 import { enrichInputSchema, type EnrichOutput } from './models/enrich-model.js';
 import morgan from "morgan";
+import { getMessage } from './llm/hello.js';
 
 const LLM_STUB = 1;
 
@@ -47,6 +48,8 @@ app.post('/enrich-record', (req: Request, res: Response) => {
         // FIX 3: Pass raw object to res.json()
         res.status(201).json(response);
     }
+    const response = getMessage(record);
+    res.send(201).json()
 });
 
 app.listen(port, () => {

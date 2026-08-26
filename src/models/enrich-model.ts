@@ -5,6 +5,7 @@ export const enrichInputSchema = z.object({
   description: z.string().max(5000).nullable(),
 });
 
+export type EnrichInput = z.infer<typeof enrichInputSchema>;
 
 export const enrichOutputSchema = z.object({
   cleansed_description: z.object({

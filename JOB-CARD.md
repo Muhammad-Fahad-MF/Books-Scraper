@@ -23,7 +23,7 @@ Identifies category, target_audience, and quality of description, cleanses the d
     },
     "summary": "string, 1-3 short sentences, 0-300 characters",
     "category": {
-        "value": one of [ fiction | speculative | suspense | memoir | business | technology | science | wellness | humanities | lifestyle | other ],
+        "value": one of [ fiction | poetry | speculative | suspense | memoir | business | technology | science | wellness | humanities | lifestyle | other ],
         "confidence": 0.0-1.0,
         "reason": "one short sentence"
     },
