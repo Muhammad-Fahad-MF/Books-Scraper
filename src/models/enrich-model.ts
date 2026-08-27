@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 export const enrichInputSchema = z.object({
-  title: z.string().min(3).max(150),
+  title: z.string().min(1).max(150),
   description: z.string().max(5000).nullable(),
 });
 
@@ -18,11 +18,12 @@ export const enrichOutputSchema = z.object({
       "html_artifacts",
     ]),
     confidence: z.number().min(0).max(1),
-    reason: z.string().min(10).max(150),
+    reason: z.string().min(5).max(300),
   }),
-  summary: z.string().min(50).max(300),
+  summary: z.string().max(500),
   category: z.object({
     value: z.enum([
+      "poetry",
       "fiction",
       "speculative",
       "suspense",
@@ -36,7 +37,7 @@ export const enrichOutputSchema = z.object({
       "other",
     ]),
     confidence: z.number().min(0).max(1),
-    reason: z.string().min(10).max(150),
+    reason: z.string().min(5).max(300),
   }),
   target_audience: z.object({
     value: z.enum([
@@ -48,7 +49,7 @@ export const enrichOutputSchema = z.object({
       "other",
     ]),
     confidence: z.number().min(0).max(1),
-    reason: z.string().min(10).max(150),
+    reason: z.string().min(5).max(300),
   }),
 });
 
