@@ -12,8 +12,8 @@ export class LLMProvider {
 
   constructor() {
     this.client = new OpenAI({
-      baseURL: env.OPENROUTER_BASE_URL,
-      apiKey: env.OPENROUTER_API_KEY,
+      baseURL: env.GOOGLE_BASE_URL,
+      apiKey: env.GOOGLE_API_KEY,
     });
   }
 
@@ -28,7 +28,7 @@ export class LLMProvider {
     const systemPrompt = await this.getSystemPrompt();
 
     const response = await this.client.chat.completions.create({
-      model: env.OPENROUTER_MODEL,
+      model: env.GOOGLE_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: JSON.stringify(record) },
@@ -43,6 +43,7 @@ export class LLMProvider {
     }
 
     const parsedJson = JSON.parse(rawContent);
+    console.log(parsedJson);
     return enrichOutputSchema.parse(parsedJson);
   }
 }
