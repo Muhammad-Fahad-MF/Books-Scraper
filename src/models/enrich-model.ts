@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 export const enrichInputSchema = z.object({
-  title: z.string().min(1).max(150),
+  title: z.string().min(1).max(250),
   description: z.string().max(5000).nullable(),
 });
 

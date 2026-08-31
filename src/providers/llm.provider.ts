@@ -12,8 +12,8 @@ export class LLMProvider {
 
   constructor() {
     this.client = new OpenAI({
-      baseURL: env.GOOGLE_BASE_URL,
-      apiKey: env.GOOGLE_API_KEY,
+      baseURL: env.GEMINI_BASE_URL,
+      apiKey: env.GEMINI_API_KEY,
     });
   }
 
@@ -28,7 +28,7 @@ export class LLMProvider {
     const systemPrompt = await this.getSystemPrompt();
 
     const response = await this.client.chat.completions.create({
-      model: env.GOOGLE_MODEL,
+      model: env.GEMINI_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: JSON.stringify(record) },

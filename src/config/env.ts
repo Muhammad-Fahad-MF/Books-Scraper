@@ -5,9 +5,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   
-  GOOGLE_BASE_URL: z.string().url().default("https://openrouter.ai/api/v1"),
-  GOOGLE_API_KEY: z.string().optional(),
-  GOOGLE_MODEL: z.string().default("google/gemini-2.5-flash"),
+  GEMINI_BASE_URL: z.string().url().default("https://generativelanguage.googleapis.com/v1beta/openai/"),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default("gemini-3.6-flash"),
   
   ENABLE_LLM_STUB: z
     .string()

@@ -105,3 +105,7 @@ curl -i http://localhost:3000
 ```
 curl -i -X POST http://localhost:3000/enrich-record -H "Content-Type: application/json" -d "{\"title\": \"Book Title\", \"description\": \"Book Description\"}"
 ```
+
+### LLM Response:
+
+For same exact request, the LLM responds with different words or vocabulary. At first Models were also not following JSON format but then when I used OpenAI response_format attribute for client request LLM starts to follow JSON schema strictly. First I tries Ollama local model but it was very slow, then I used OpenRouter with nvidia nemotron but it had very high latency and now this endpoint uses google ai studio gemini-3.6-flash, which is pretty fast.

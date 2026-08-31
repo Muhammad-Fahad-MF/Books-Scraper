@@ -7,7 +7,7 @@ Identifies category, target_audience, and quality of description, cleanses the d
 ### Input:
 ```
 {   
-    "title": "string, 1-150 characters",
+    "title": "string, 1-250 characters",
     "description": "string, 0-5000 characters"
 }
 ```
