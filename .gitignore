@@ -9,6 +9,8 @@ node_modules/
 .env.local
 
 # Logs
+logs
+logs/*
 *.log
 npm-debug.log*
 

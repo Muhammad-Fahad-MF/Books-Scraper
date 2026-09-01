@@ -2,8 +2,9 @@ import { readFile } from "node:fs/promises";
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod.js";
 import { env } from "../config/env.js";
-import { enrichOutputSchema, type EnrichInput, type EnrichOutput } from "../models/enrich-model.js";
+import { enrichOutputSchema, type EnrichInput } from "../models/enrich-model.js";
 import { BadGatewayError } from "../errors/http-error.js";
+
 
 export class LLMProvider {
   private client: OpenAI;
@@ -24,12 +25,14 @@ export class LLMProvider {
     return this.cachedSystemPrompt;
   }
 
-  public async fetchEnrichment(record: EnrichInput): Promise<EnrichOutput> {
+  public async fetchEnrichment(record: EnrichInput, errorMessage?: string) {
     const systemPrompt = await this.getSystemPrompt();
-
     const response = await this.client.chat.completions.create({
       model: env.GEMINI_MODEL,
       messages: [
+        errorMessage
+          ? { role: "system", content: `${systemPrompt}\n\n${errorMessage}` }
+          :
         { role: "system", content: systemPrompt },
         { role: "user", content: JSON.stringify(record) },
       ],
@@ -44,7 +47,7 @@ export class LLMProvider {
 
     const parsedJson = JSON.parse(rawContent);
     console.log(parsedJson);
-    return enrichOutputSchema.parse(parsedJson);
+    return parsedJson;
   }
 }
 
