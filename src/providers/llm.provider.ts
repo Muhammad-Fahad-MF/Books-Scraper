@@ -2,9 +2,11 @@ import { readFile } from "node:fs/promises";
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod.js";
 import { env } from "../config/env.js";
-import { enrichOutputSchema, type EnrichInput } from "../models/enrich-model.js";
+import {
+  enrichOutputSchema,
+  type EnrichInput,
+} from "../models/enrich-model.js";
 import { BadGatewayError } from "../errors/http-error.js";
-
 
 export class LLMProvider {
   private client: OpenAI;
@@ -15,12 +17,16 @@ export class LLMProvider {
     this.client = new OpenAI({
       baseURL: env.GEMINI_BASE_URL,
       apiKey: env.GEMINI_API_KEY,
+      timeout: 30000,
+      maxRetries: 1,
     });
   }
 
   private async getSystemPrompt(): Promise<string> {
     if (!this.cachedSystemPrompt) {
-      this.cachedSystemPrompt = await readFile(this.promptPath, { encoding: "utf-8" });
+      this.cachedSystemPrompt = await readFile(this.promptPath, {
+        encoding: "utf-8",
+      });
     }
     return this.cachedSystemPrompt;
   }
@@ -32,8 +38,7 @@ export class LLMProvider {
       messages: [
         errorMessage
           ? { role: "system", content: `${systemPrompt}\n\n${errorMessage}` }
-          :
-        { role: "system", content: systemPrompt },
+          : { role: "system", content: systemPrompt },
         { role: "user", content: JSON.stringify(record) },
       ],
       temperature: 0.2,
