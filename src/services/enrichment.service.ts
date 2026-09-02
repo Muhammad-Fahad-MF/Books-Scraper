@@ -22,14 +22,14 @@ export class EnrichmentService {
     if (env.ENABLE_LLM_STUB) {
       return this.getMockEnrichment(record);
     }
-    const res = await llmProvider.fetchEnrichment(record);
+    const res = await llmProvider.getResponse(record);
     const parsed = enrichOutputSchema.safeParse(res);
     if(parsed.success){
       return parsed.data;
     }
     const errorMessage = `Your previous output contained this error: ${prettifyError(parsed.error)}`;
     console.log(errorMessage);
-    const retryResponse = await llmProvider.fetchEnrichment(record, errorMessage);
+    const retryResponse = await llmProvider.getResponse(record, errorMessage);
     const retryParsed = enrichOutputSchema.safeParse(retryResponse);
     if(retryParsed.success){
       return retryParsed.data;
